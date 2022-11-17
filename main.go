@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/simplylib/multierror"
 	"golang.org/x/mod/semver"
 )
 
@@ -44,7 +45,6 @@ func getGoEnv(ctx context.Context) (GoEnv, error) {
 	}
 
 	return goEnv, nil
-
 }
 
 type ctxReaderAt struct {
@@ -70,9 +70,17 @@ func getGoBinaryInfo(ctx context.Context, path string) (*buildinfo.BuildInfo, er
 	if err != nil {
 		return nil, fmt.Errorf("could not open file (%v) due to error (%w)", path, err)
 	}
+	defer func() {
+		if err2 := f.Close(); err2 != nil {
+			err = multierror.Append(err, err2)
+		}
+	}()
 
 	if deadline, ok := ctx.Deadline(); ok {
-		f.SetDeadline(deadline)
+		err = f.SetDeadline(deadline)
+		if err != nil {
+			return nil, fmt.Errorf("could not set file deadline (%w)", err)
+		}
 	}
 
 	info, err := buildinfo.Read(&ctxReaderAt{reader: f, ctx: ctx})
@@ -113,12 +121,10 @@ func run() error {
 		osSignal := make(chan os.Signal, 1)
 		signal.Notify(osSignal, syscall.SIGTERM, os.Interrupt)
 
-		select {
-		case s := <-osSignal:
-			log.Printf("Cancelling operations due to (%v)\n", s.String())
-			cancelFunc()
-			log.Println("operations cancelled")
-		}
+		s := <-osSignal
+		log.Printf("Cancelling operations due to (%v)\n", s.String())
+		cancelFunc()
+		log.Println("operations cancelled")
 	}()
 
 	var goBinVer string
