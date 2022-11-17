@@ -93,6 +93,100 @@ func getGoBinaryInfo(ctx context.Context, path string) (*buildinfo.BuildInfo, er
 	return info, nil
 }
 
+// getAllGoBins returns a slice of paths to Go binaries in the GOBIN, a string which is the semver of the detected Go compiler's version, and the error
+func getAllGoBins(ctx context.Context, verbose bool) ([]string, string, error) {
+	if verbose {
+		log.Println("running (go env)")
+	}
+
+	goEnv, err := getGoEnv(ctx)
+	if err != nil {
+		return nil, "", fmt.Errorf("could not get goEnv (%w)", err)
+	}
+
+	var binaryDir string
+
+	if goEnv.GoBin != "" {
+		binaryDir = goEnv.GoBin
+	} else if goEnv.GoBin == "" && goEnv.GoPath == "" {
+		return nil, "", errNoGoBinOrPath
+	} else {
+		binaryDir = filepath.Join(goEnv.GoPath, "bin")
+	}
+
+	if verbose {
+		log.Printf("found go version (%v)", goEnv.GoVersion)
+	}
+
+	files, err := os.ReadDir(filepath.Clean(binaryDir))
+	if err != nil {
+		return nil, "", fmt.Errorf("could not Readdir (%v) due to error (%w)", filepath.Clean(binaryDir), err)
+	}
+
+	// prealloc since most of the time the GOBIN dir should be empty expect for Go binaries from "go install"
+	paths := make([]string, 0, len(files))
+
+	for i := range files {
+		if files[i].IsDir() {
+			continue
+		}
+		paths = append(paths, filepath.Join(binaryDir, files[i].Name()))
+	}
+
+	return paths, goEnv.GoVersion, nil
+}
+
+func updateBinaries(ctx context.Context, paths []string, verbose bool, goBinVer string) error {
+	var eg errgroup.Group
+	eg.SetLimit(runtime.NumCPU())
+
+	for _, path := range paths {
+		path := path
+		eg.Go(func() error {
+			info, err := getGoBinaryInfo(ctx, path)
+			if err != nil {
+				return fmt.Errorf("could not getGoBinaryInfo of (%v) due to error (%w)", path, err)
+			}
+
+			if semver.Compare(info.GoVersion, goBinVer) > -1 {
+				if verbose {
+					log.Printf(
+						"skipping (%v) as its version (%v) is equal or higher than the currently installed Go version (%v)\n",
+						path,
+						info.GoVersion,
+						goBinVer,
+					)
+				}
+				return nil
+			}
+
+			if verbose {
+				log.Printf("reinstalling (%v)\n", path)
+			}
+
+			cmd := exec.CommandContext(ctx, "go", "install", info.Path+"@"+info.GoVersion)
+			cmd.Stderr = os.Stderr
+			cmd.Stdout = os.Stdout
+
+			err = cmd.Run()
+			if err != nil {
+				return fmt.Errorf(
+					"could not (go install %v@%v) due to error (%w)",
+					info.Path,
+					info.GoVersion,
+					err,
+				)
+			}
+
+			return nil
+		})
+	}
+
+	return eg.Wait()
+
+	return nil
+}
+
 var errNoGoBinOrPath = errors.New("goreinstall: unable to find a GOPATH or GOBIN from command (go env -json)")
 
 func run() error {
@@ -131,98 +225,28 @@ func run() error {
 	}()
 
 	var (
-		goBinVer    string
-		binaryPaths []string
+		goBinVer string
+		paths    []string
 	)
 	if *all {
-		if *verbose {
-			log.Println("running (go env)")
-		}
-
-		goEnv, err := getGoEnv(ctx)
+		var err error
+		paths, goBinVer, err = getAllGoBins(ctx, *verbose)
 		if err != nil {
-			return fmt.Errorf("could not get goEnv (%w)", err)
-		}
-
-		var binaryDir string
-
-		if goEnv.GoBin != "" {
-			binaryDir = goEnv.GoBin
-		} else if goEnv.GoBin == "" && goEnv.GoPath == "" {
-			return errNoGoBinOrPath
-		} else {
-			binaryDir = filepath.Join(goEnv.GoPath, "bin")
-		}
-
-		goBinVer = goEnv.GoVersion
-		if *verbose {
-			log.Printf("found go version (%v)", goBinVer)
-		}
-
-		files, err := os.ReadDir(filepath.Clean(binaryDir))
-		if err != nil {
-			return fmt.Errorf("could not Readdir (%v) due to error (%w)", filepath.Clean(binaryDir), err)
-		}
-
-		for i := range files {
-			if files[i].IsDir() {
-				continue
-			}
-			binaryPaths = append(binaryPaths, filepath.Join(binaryDir, files[i].Name()))
+			return fmt.Errorf("could not getAllGoBins (%w)", err)
 		}
 	} else {
-		binaryPaths = flag.Args()
+		paths = flag.Args()
 	}
 
 	if *verbose {
 		log.Println("going to try and check if we need to reinstall these binaries")
 
-		for i := range binaryPaths {
-			log.Println("\t" + binaryPaths[i])
+		for i := range paths {
+			log.Println("\t" + paths[i])
 		}
 	}
 
-	var eg errgroup.Group
-	eg.SetLimit(runtime.NumCPU())
-
-	for _, path := range binaryPaths {
-		path := path
-		eg.Go(func() error {
-			info, err := getGoBinaryInfo(ctx, path)
-			if err != nil {
-				return fmt.Errorf("could not getGoBinaryInfo of (%v) due to error (%w)", path, err)
-			}
-
-			if semver.Compare(info.GoVersion, goBinVer) > -1 {
-				if *verbose {
-					log.Printf(
-						"skipping (%v) as its version (%v) is equal or higher than the currently installed Go version (%v)\n",
-						path,
-						info.GoVersion,
-						goBinVer,
-					)
-				}
-				return nil
-			}
-
-			if *verbose {
-				log.Printf("reinstalling (%v)\n", path)
-			}
-
-			cmd := exec.CommandContext(ctx, "go", "install", info.Path+"@"+info.GoVersion)
-			cmd.Stderr = os.Stderr
-			cmd.Stdout = os.Stdout
-
-			err = cmd.Run()
-			if err != nil {
-				return fmt.Errorf("could not (go install %v@%v) due to error (%w)", info.Path, info.GoVersion, err)
-			}
-
-			return nil
-		})
-	}
-
-	return eg.Wait()
+	return updateBinaries(ctx, paths, *verbose, goBinVer)
 }
 
 func main() {
