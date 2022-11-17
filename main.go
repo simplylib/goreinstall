@@ -14,8 +14,10 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"syscall"
 
+	"github.com/simplylib/errgroup"
 	"github.com/simplylib/multierror"
 	"golang.org/x/mod/semver"
 )
@@ -111,7 +113,8 @@ func run() error {
 	flag.Parse()
 
 	if flag.NArg() == 0 && !*all {
-		log.Println("Expected at least 1 package")
+		log.Println("Expected at least 1 package", "\n")
+		flag.CommandLine.Usage()
 		return nil
 	}
 
@@ -177,43 +180,47 @@ func run() error {
 		}
 	}
 
-	var (
-		info *buildinfo.BuildInfo
-		err  error
-	)
+	var eg errgroup.Group
+	eg.SetLimit(runtime.NumCPU())
+
 	for _, path := range binaryPaths {
-		info, err = getGoBinaryInfo(ctx, path)
-		if err != nil {
-			return fmt.Errorf("could not getGoBinaryInfo of (%v) due to error (%w)", path, err)
-		}
-
-		if semver.Compare(info.GoVersion, goBinVer) > -1 {
-			if *verbose {
-				log.Printf(
-					"skipping (%v) as its version (%v) is equal or higher than the currently installed Go version (%v)\n",
-					path,
-					info.GoVersion,
-					goBinVer,
-				)
+		path := path
+		eg.Go(func() error {
+			info, err := getGoBinaryInfo(ctx, path)
+			if err != nil {
+				return fmt.Errorf("could not getGoBinaryInfo of (%v) due to error (%w)", path, err)
 			}
-			continue
-		}
 
-		if *verbose {
-			log.Printf("reinstalling (%v)\n", path)
-		}
+			if semver.Compare(info.GoVersion, goBinVer) > -1 {
+				if *verbose {
+					log.Printf(
+						"skipping (%v) as its version (%v) is equal or higher than the currently installed Go version (%v)\n",
+						path,
+						info.GoVersion,
+						goBinVer,
+					)
+				}
+				return nil
+			}
 
-		cmd := exec.CommandContext(ctx, "go", "install", info.Path+"@"+info.GoVersion)
-		cmd.Stderr = os.Stderr
-		cmd.Stdout = os.Stdout
+			if *verbose {
+				log.Printf("reinstalling (%v)\n", path)
+			}
 
-		err = cmd.Run()
-		if err != nil {
-			return fmt.Errorf("could not (go install %v@%v) due to error (%w)", info.Path, info.GoVersion, err)
-		}
+			cmd := exec.CommandContext(ctx, "go", "install", info.Path+"@"+info.GoVersion)
+			cmd.Stderr = os.Stderr
+			cmd.Stdout = os.Stdout
+
+			err = cmd.Run()
+			if err != nil {
+				return fmt.Errorf("could not (go install %v@%v) due to error (%w)", info.Path, info.GoVersion, err)
+			}
+
+			return nil
+		})
 	}
 
-	return nil
+	return eg.Wait()
 }
 
 func main() {
