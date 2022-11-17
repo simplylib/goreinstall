@@ -60,6 +60,7 @@ func (c *ctxReaderAt) ReadAt(p []byte, off int64) (n int, err error) {
 		if !ok {
 			return 0, errCtxReaderCancelled
 		}
+	default:
 	}
 	return c.reader.ReadAt(p, off)
 }
@@ -85,15 +86,17 @@ func getGoBinaryInfo(ctx context.Context, path string) (*buildinfo.BuildInfo, er
 var errNoGoBinOrPath = errors.New("goreinstall: unable to find a GOPATH or GOBIN from command (go env -json)")
 
 func run() error {
+	verbose := flag.Bool("v", false, "be verbose about operations")
 	all := flag.Bool("a", false, "reinstall all binaries in GOBIN (eX: after go version update)")
 	//update := flag.Bool("u", false, "update binaries if there is an update available")
 
 	flag.CommandLine.Usage = func() {
-		fmt.Fprintln(flag.CommandLine.Output(), os.Args[0]+" reinstalls modules with new versions or when a the go version is lower than the current one")
-		fmt.Fprintln(flag.CommandLine.Output(), "Usage: "+os.Args[0]+" [flags] <package(s) ...>")
+		fmt.Fprintln(flag.CommandLine.Output(), os.Args[0]+" reinstalls modules with new versions or when the go version is lower than the current one")
+		fmt.Fprintln(flag.CommandLine.Output(), "\nUsage: "+os.Args[0]+" [flags] <package(s) ...>")
 		fmt.Fprintln(flag.CommandLine.Output(), "Ex: "+os.Args[0]+" -a             // reinstall all binaries in GOBIN")
 		fmt.Fprintln(flag.CommandLine.Output(), "Ex: "+os.Args[0]+" -a -u          // reinstall all binaries and update if needed")
 		fmt.Fprintln(flag.CommandLine.Output(), "Ex: "+os.Args[0]+" goreinstall -u // reinstall goreinstall and update if needed")
+		fmt.Fprintln(flag.CommandLine.Output(), "\nFlags:")
 		flag.CommandLine.PrintDefaults()
 	}
 
@@ -101,24 +104,30 @@ func run() error {
 
 	if flag.NArg() == 0 && !*all {
 		log.Println("Expected at least 1 package")
+		return nil
 	}
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
 	go func() {
 		osSignal := make(chan os.Signal, 1)
 		signal.Notify(osSignal, syscall.SIGTERM, os.Interrupt)
 
 		select {
 		case s := <-osSignal:
-			fmt.Printf("Cancelling operations due to (%v)\n", s.String())
+			log.Printf("Cancelling operations due to (%v)\n", s.String())
 			cancelFunc()
-			fmt.Println("operations cancelled")
+			log.Println("operations cancelled")
 		}
 	}()
 
 	var goBinVer string
 	var binaryPaths []string
 	if *all {
+		if *verbose {
+			log.Println("running (go env)")
+		}
+
 		goEnv, err := getGoEnv(ctx)
 		if err != nil {
 			return fmt.Errorf("could not get goEnv (%w)", err)
@@ -128,13 +137,16 @@ func run() error {
 
 		if goEnv.GoBin != "" {
 			binaryDir = goEnv.GoBin
-		} else if goEnv.GoBin == "" && goEnv.GoBin == "" {
+		} else if goEnv.GoBin == "" && goEnv.GoPath == "" {
 			return errNoGoBinOrPath
 		} else {
-			binaryDir = goEnv.GoPath
+			binaryDir = filepath.Join(goEnv.GoPath, "bin")
 		}
 
 		goBinVer = goEnv.GoVersion
+		if *verbose {
+			log.Printf("found go version (%v)", goBinVer)
+		}
 
 		files, err := os.ReadDir(filepath.Clean(binaryDir))
 		if err != nil {
@@ -151,6 +163,14 @@ func run() error {
 		binaryPaths = flag.Args()
 	}
 
+	if *verbose {
+		log.Println("going to try and check if we need to reinstall these binaries")
+
+		for i := range binaryPaths {
+			log.Println("\t" + binaryPaths[i])
+		}
+	}
+
 	var (
 		info *buildinfo.BuildInfo
 		err  error
@@ -162,7 +182,19 @@ func run() error {
 		}
 
 		if semver.Compare(info.GoVersion, goBinVer) > -1 {
+			if *verbose {
+				log.Printf(
+					"skipping (%v) as its version (%v) is equal or higher than the currently installed Go version (%v)\n",
+					path,
+					info.GoVersion,
+					goBinVer,
+				)
+			}
 			continue
+		}
+
+		if *verbose {
+			log.Printf("reinstalling (%v)\n", path)
 		}
 
 		cmd := exec.CommandContext(ctx, "go", "install", info.Path+"@"+info.GoVersion)
