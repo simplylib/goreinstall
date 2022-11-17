@@ -130,8 +130,10 @@ func run() error {
 		log.Println("operations cancelled")
 	}()
 
-	var goBinVer string
-	var binaryPaths []string
+	var (
+		goBinVer    string
+		binaryPaths []string
+	)
 	if *all {
 		if *verbose {
 			log.Println("running (go env)")
