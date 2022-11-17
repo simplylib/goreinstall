@@ -19,8 +19,6 @@ import (
 	"golang.org/x/mod/semver"
 )
 
-func getGoVersion()
-
 type GoEnv struct {
 	GoBin     string `json:"GOBIN"`
 	GoPath    string `json:"GOPATH"`
