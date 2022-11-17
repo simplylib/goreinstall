@@ -136,9 +136,9 @@ func getAllGoBins(ctx context.Context, verbose bool) ([]string, string, error) {
 	return paths, goEnv.GoVersion, nil
 }
 
-func updateBinaries(ctx context.Context, paths []string, verbose bool, goBinVer string) error {
+func updateBinaries(ctx context.Context, paths []string, workers int, verbose bool, goBinVer string) error {
 	var eg errgroup.Group
-	eg.SetLimit(runtime.NumCPU())
+	eg.SetLimit(workers)
 
 	for _, path := range paths {
 		path := path
@@ -192,6 +192,7 @@ var errNoGoBinOrPath = errors.New("goreinstall: unable to find a GOPATH or GOBIN
 func run() error {
 	verbose := flag.Bool("v", false, "be verbose about operations")
 	all := flag.Bool("a", false, "reinstall all binaries in GOBIN (eX: after go version update)")
+	maxWorkers := flag.Int("t", runtime.NumCPU()*2, "max number of binaries to reinstall at once")
 	//update := flag.Bool("u", false, "update binaries if there is an update available")
 
 	flag.CommandLine.Usage = func() {
@@ -246,7 +247,7 @@ func run() error {
 		}
 	}
 
-	return updateBinaries(ctx, paths, *verbose, goBinVer)
+	return updateBinaries(ctx, paths, *maxWorkers, *verbose, goBinVer)
 }
 
 func main() {
