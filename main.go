@@ -136,7 +136,7 @@ func getAllGoBins(ctx context.Context, verbose bool) ([]string, string, error) {
 	return paths, goEnv.GoVersion, nil
 }
 
-func updateBinaries(ctx context.Context, paths []string, workers int, verbose bool, goBinVer string) error {
+func reinstallBinaries(ctx context.Context, paths []string, workers int, update bool, verbose bool, goBinVer string) error {
 	var eg errgroup.Group
 	eg.SetLimit(workers)
 
@@ -146,6 +146,27 @@ func updateBinaries(ctx context.Context, paths []string, workers int, verbose bo
 			info, err := getGoBinaryInfo(ctx, path)
 			if err != nil {
 				return fmt.Errorf("could not getGoBinaryInfo of (%v) due to error (%w)", path, err)
+			}
+
+			if update {
+				if verbose {
+					log.Printf("updating binary (%v)", path)
+				}
+
+				cmd := exec.CommandContext(ctx, "go", "install", info.Path+"@latest")
+				cmd.Stderr = os.Stderr
+				cmd.Stdout = os.Stdout
+
+				err = cmd.Run()
+				if err != nil {
+					return fmt.Errorf(
+						"could not (go install %v@latest) due to error (%w)",
+						info.Path,
+						err,
+					)
+				}
+
+				return nil
 			}
 
 			if semver.Compare(info.GoVersion, goBinVer) > -1 {
@@ -193,7 +214,7 @@ func run() error {
 	verbose := flag.Bool("v", false, "be verbose about operations")
 	all := flag.Bool("a", false, "reinstall all binaries in GOBIN (eX: after go version update)")
 	maxWorkers := flag.Int("t", runtime.NumCPU()*2, "max number of binaries to reinstall at once")
-	//update := flag.Bool("u", false, "update binaries if there is an update available")
+	update := flag.Bool("u", false, "update binaries if there is an update available")
 
 	flag.CommandLine.Usage = func() {
 		fmt.Fprintln(flag.CommandLine.Output(), os.Args[0]+" reinstalls modules with new versions or when the go version is lower than the current one")
@@ -247,7 +268,7 @@ func run() error {
 		}
 	}
 
-	return updateBinaries(ctx, paths, *maxWorkers, *verbose, goBinVer)
+	return reinstallBinaries(ctx, paths, *maxWorkers, *update, *verbose, goBinVer)
 }
 
 func main() {
