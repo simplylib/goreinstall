@@ -15,6 +15,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 
 	"github.com/simplylib/errgroup"
@@ -90,6 +91,8 @@ func getGoBinaryInfo(ctx context.Context, path string) (*buildinfo.BuildInfo, er
 		return nil, fmt.Errorf("could not Read buildinfo of (%v) due to error (%w)", path, err)
 	}
 
+	info.GoVersion = strings.ReplaceAll(info.GoVersion, "go", "")
+
 	return info, nil
 }
 
@@ -133,7 +136,7 @@ func getAllGoBins(ctx context.Context, verbose bool) ([]string, string, error) {
 		paths = append(paths, filepath.Join(binaryDir, files[i].Name()))
 	}
 
-	return paths, goEnv.GoVersion, nil
+	return paths, strings.ReplaceAll(goEnv.GoVersion, "go", ""), nil
 }
 
 func reinstallBinaries(ctx context.Context, paths []string, workers int, update bool, verbose bool, goBinVer string) error {
@@ -169,7 +172,7 @@ func reinstallBinaries(ctx context.Context, paths []string, workers int, update 
 				return nil
 			}
 
-			if semver.Compare(info.GoVersion, goBinVer) > -1 {
+			if semver.Compare(info.GoVersion, goBinVer) == -1 {
 				if verbose {
 					log.Printf(
 						"skipping (%v) as its version (%v) is equal or higher than the currently installed Go version (%v)\n",
@@ -185,7 +188,7 @@ func reinstallBinaries(ctx context.Context, paths []string, workers int, update 
 				log.Printf("reinstalling (%v)\n", path)
 			}
 
-			cmd := exec.CommandContext(ctx, "go", "install", info.Path+"@"+info.GoVersion)
+			cmd := exec.CommandContext(ctx, "go", "install", info.Path+"@"+info.Main.Version)
 			cmd.Stderr = os.Stderr
 			cmd.Stdout = os.Stdout
 
