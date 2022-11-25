@@ -216,12 +216,12 @@ func run() error {
 	list := flag.Bool("l", false, "list all binaries found in GOBIN with extra version information")
 
 	flag.CommandLine.Usage = func() {
-		fmt.Fprintln(flag.CommandLine.Output(),
-			os.Args[0]+" reinstalls modules with new versions or when the go version is lower than the current one",
-			"\nUsage: "+os.Args[0]+" [flags] <package(s) ...>",
-			"Ex: "+os.Args[0]+" -a             // reinstall all binaries in GOBIN",
-			"Ex: "+os.Args[0]+" -a -u          // reinstall all binaries and update if needed",
-			"Ex: "+os.Args[0]+" goreinstall -u // reinstall goreinstall and update if needed",
+		fmt.Fprint(flag.CommandLine.Output(),
+			os.Args[0]+" reinstalls modules with new versions or when the go version is lower than the current one\n",
+			"\nUsage: "+os.Args[0]+" [flags] <package(s) ...>\n",
+			"Ex: "+os.Args[0]+" -a             // reinstall all binaries in GOBIN\n",
+			"Ex: "+os.Args[0]+" -a -u          // reinstall all binaries and update if needed\n",
+			"Ex: "+os.Args[0]+" goreinstall -u // reinstall goreinstall and update if needed\n",
 			"\nFlags:",
 		)
 		flag.CommandLine.PrintDefaults()
