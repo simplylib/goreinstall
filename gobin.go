@@ -193,7 +193,7 @@ func reinstallBinaries(ctx context.Context, paths []string, workers int, verbose
 				return fmt.Errorf("could not getGoBinaryInfo of (%v) due to error (%w)", path, err)
 			}
 
-			if semver.Compare(info.GoVersion, goBinVer) == -1 {
+			if semver.Compare(info.GoVersion, goBinVer) <= 0 {
 				if verbose {
 					log.Printf(
 						"skipping (%v) as its version (%v) is equal or higher than the currently installed Go version (%v)\n",
