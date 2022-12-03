@@ -16,6 +16,7 @@ import (
 
 	"github.com/simplylib/errgroup"
 	"github.com/simplylib/multierror"
+	"github.com/simplylib/ucheck/modproxy"
 	"golang.org/x/mod/semver"
 )
 
@@ -130,7 +131,57 @@ func getAllGoBins(goEnv GoEnv, verbose bool) ([]string, error) {
 	return paths, nil
 }
 
-func reinstallBinaries(ctx context.Context, paths []string, workers int, update bool, verbose bool, goBinVer string) error {
+func updateBinaries(ctx context.Context, paths []string, workers int, verbose bool, goBinVer string) error {
+	var eg errgroup.Group
+	eg.SetLimit(workers)
+
+	for _, path := range paths {
+		path := path
+
+		eg.Go(func() error {
+			info, err := getGoBinaryInfo(ctx, path)
+			if err != nil {
+				return fmt.Errorf("could not getGoBinaryInfo of (%v) due to error (%w)", path, err)
+			}
+
+			if verbose {
+				log.Printf("checking binary (%v) for updates", path)
+			}
+
+			ver, err := modproxy.GetLatestVersion(ctx, info.Main.Path)
+			if err != nil {
+				return fmt.Errorf("could not GetLatestVersion of (%v) due to error (%w)", path, err)
+			}
+
+			// if current version is not less than latest version
+			if semver.Compare(info.Main.Version, ver.Version) != -1 {
+				if verbose {
+					log.Printf(
+						"skipping updating (%v) as version (%v) is greater than or equal to latest (%v)\n",
+						path,
+						info.Main.Version,
+						ver.Version,
+					)
+				}
+				return nil
+			}
+
+			cmd := exec.CommandContext(ctx, "go", "install", info.Path+"@latest")
+			cmd.Stderr = os.Stderr
+			cmd.Stdout = os.Stdout
+
+			if err = cmd.Run(); err != nil {
+				return fmt.Errorf("could not (go install %v@latest) error (%w)", info.Path, err)
+			}
+
+			return nil
+		})
+	}
+
+	return eg.Wait()
+}
+
+func reinstallBinaries(ctx context.Context, paths []string, workers int, verbose bool, goBinVer string) error {
 	var eg errgroup.Group
 	eg.SetLimit(workers)
 
@@ -140,27 +191,6 @@ func reinstallBinaries(ctx context.Context, paths []string, workers int, update 
 			info, err := getGoBinaryInfo(ctx, path)
 			if err != nil {
 				return fmt.Errorf("could not getGoBinaryInfo of (%v) due to error (%w)", path, err)
-			}
-
-			if update {
-				if verbose {
-					log.Printf("updating binary (%v)", path)
-				}
-
-				cmd := exec.CommandContext(ctx, "go", "install", info.Path+"@latest")
-				cmd.Stderr = os.Stderr
-				cmd.Stdout = os.Stdout
-
-				err = cmd.Run()
-				if err != nil {
-					return fmt.Errorf(
-						"could not (go install %v@latest) due to error (%w)",
-						info.Path,
-						err,
-					)
-				}
-
-				return nil
 			}
 
 			if semver.Compare(info.GoVersion, goBinVer) == -1 {

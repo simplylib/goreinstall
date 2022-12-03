@@ -8,9 +8,12 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"syscall"
+
+	"golang.org/x/exp/slices"
 )
 
 var errNoGoBinOrPath = errors.New("goreinstall: unable to find a GOPATH or GOBIN from command (go env -json)")
@@ -23,6 +26,7 @@ func run() error {
 	maxWorkers := flag.Int("t", runtime.NumCPU(), "max number of binaries to reinstall at once")
 	update := flag.Bool("u", false, "update binaries if there is an update available")
 	list := flag.Bool("l", false, "list all binaries found in GOBIN with extra version information")
+	exclude := flag.String("e", "", "list of binaries to exclude from running against ex: \"goreinstall,gitsum\"")
 
 	flag.CommandLine.Usage = func() {
 		fmt.Fprint(flag.CommandLine.Output(),
@@ -82,7 +86,30 @@ func run() error {
 			return fmt.Errorf("could not getAllGoBins (%w)", err)
 		}
 	} else {
-		paths = flag.Args()
+		paths = append(paths, flag.Args()...)
+	}
+
+	// strip excluded paths out
+	if *exclude != "" {
+		splitExcludes := strings.Split(strings.ReplaceAll(*exclude, " ", ""), ",")
+
+		if *verbose {
+			log.Printf("-e set, skipping (%v)", splitExcludes)
+		}
+
+		var strippedPaths []int
+		for i := range paths {
+			for j := range splitExcludes {
+				if filepath.Base(paths[i]) != splitExcludes[j] {
+					continue
+				}
+				strippedPaths = append(strippedPaths, i)
+			}
+		}
+
+		for _, path := range strippedPaths {
+			paths = slices.Delete(paths, path, path+1)
+		}
 	}
 
 	if *verbose {
@@ -93,7 +120,17 @@ func run() error {
 		}
 	}
 
-	return reinstallBinaries(ctx, paths, *maxWorkers, *update, *verbose, goBinVer)
+	// update binaries before attempting to reinstall those binaries.
+	// This will give us a chance to install binaries with current updates and current compiler,
+	// preventing reinstalling just to recompile with current Go version ofr those select ones.
+	if *update {
+		err := updateBinaries(ctx, paths, *maxWorkers, *verbose, goBinVer)
+		if err != nil {
+			return fmt.Errorf("could not updateBinaries (%w)", err)
+		}
+	}
+
+	return reinstallBinaries(ctx, paths, *maxWorkers, *verbose, goBinVer)
 }
 
 func main() {
