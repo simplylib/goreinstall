@@ -1,6 +1,11 @@
 # goreinstall
 A Go (golang) tool to update and/or reinstall binaries in GOBIN/GOROOT after a go version update
 
+## Installing
+```
+go install github.com/simplylib/goreinstall@latest
+```
+
 ## Usage
 ```
 goreinstall reinstalls modules with new versions or when the go version is lower than the current one
