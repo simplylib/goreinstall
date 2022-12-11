@@ -31,7 +31,7 @@ func run() error {
 	flag.CommandLine.Usage = func() {
 		fmt.Fprint(flag.CommandLine.Output(),
 			os.Args[0]+" reinstalls modules with new versions or when the go version is lower than the current one\n",
-			"\nUsage: "+os.Args[0]+" [flags] <package(s) ...>\n",
+			"\nUsage: "+os.Args[0]+" [flags] <package(s) ...>\n\n",
 			"Ex: "+os.Args[0]+" -a             // reinstall all binaries in GOBIN\n",
 			"Ex: "+os.Args[0]+" -a -u          // reinstall all binaries and update if needed\n",
 			"Ex: "+os.Args[0]+" goreinstall -u // reinstall goreinstall and update if needed\n",
