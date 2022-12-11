@@ -22,7 +22,7 @@ func run() error {
 	log.SetFlags(0)
 
 	verbose := flag.Bool("v", false, "be verbose about operations")
-	all := flag.Bool("a", false, "reinstall all binaries in GOBIN (eX: after go version update)")
+	all := flag.Bool("a", false, "reinstall all binaries in GOBIN (ex: after go version update)")
 	maxWorkers := flag.Int("t", runtime.NumCPU(), "max number of binaries to reinstall at once")
 	update := flag.Bool("u", false, "update binaries if there is an update available")
 	list := flag.Bool("l", false, "list all binaries found in GOBIN with extra version information")

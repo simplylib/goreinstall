@@ -16,7 +16,7 @@ Ex: goreinstall -a             // reinstall all binaries in GOBIN
 Ex: goreinstall -a -u          // reinstall all binaries and update if needed
 Ex: goreinstall goreinstall -u // reinstall goreinstall and update if needed
 
-Flags:  -a      reinstall all binaries in GOBIN (eX: after go version update)
+Flags:  -a      reinstall all binaries in GOBIN (ex: after go version update)
   -e string
         list of binaries to exclude from running against ex: "goreinstall,gitsum"
   -f    forcefully reinstall binaries even if not required
