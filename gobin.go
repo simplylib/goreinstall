@@ -20,13 +20,13 @@ import (
 	"golang.org/x/mod/semver"
 )
 
-type GoEnv struct {
+type goEnvVars struct {
 	GoBin     string `json:"GOBIN"`
 	GoPath    string `json:"GOPATH"`
 	GoVersion string `json:"GOVERSION"`
 }
 
-func getGoEnv(ctx context.Context) (GoEnv, error) {
+func getGoEnv(ctx context.Context) (goEnvVars, error) {
 	cmd := exec.CommandContext(ctx, "go", "env", "-json")
 	cmd.Stderr = os.Stderr
 
@@ -35,13 +35,13 @@ func getGoEnv(ctx context.Context) (GoEnv, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return GoEnv{}, fmt.Errorf("could not run (go env -json) due to error (%w)", err)
+		return goEnvVars{}, fmt.Errorf("could not run (go env -json) due to error (%w)", err)
 	}
 
-	goEnv := GoEnv{}
+	goEnv := goEnvVars{}
 	err = json.Unmarshal(stdoutBuf.Bytes(), &goEnv)
 	if err != nil {
-		return GoEnv{}, fmt.Errorf("could not parse JSON from (go env -json) due to error (%w)", err)
+		return goEnvVars{}, fmt.Errorf("could not parse JSON from (go env -json) due to error (%w)", err)
 	}
 
 	return goEnv, nil
@@ -94,7 +94,7 @@ func getGoBinaryInfo(ctx context.Context, path string) (*buildinfo.BuildInfo, er
 }
 
 // getAllGoBins as a slice of paths to Go binaries in the GOBIN
-func getAllGoBins(goEnv GoEnv, verbose bool) ([]string, error) {
+func getAllGoBins(goEnv goEnvVars, verbose bool) ([]string, error) {
 	if verbose {
 		log.Println("running (go env)")
 	}
