@@ -131,11 +131,19 @@ func getAllGoBins(goEnv goEnvVars, verbose bool) ([]string, error) {
 	return paths, nil
 }
 
-func updateBinaries(ctx context.Context, paths []string, workers int, verbose bool, goBinVer string) error {
-	var eg errgroup.Group
-	eg.SetLimit(workers)
+type goBin struct {
+	paths    []string
+	goBinVer string
 
-	for _, path := range paths {
+	workers int
+	verbose bool
+}
+
+func (gb *goBin) updateBinaries(ctx context.Context) error {
+	var eg errgroup.Group
+	eg.SetLimit(gb.workers)
+
+	for _, path := range gb.paths {
 		path := path
 
 		eg.Go(func() error {
@@ -144,7 +152,7 @@ func updateBinaries(ctx context.Context, paths []string, workers int, verbose bo
 				return fmt.Errorf("could not getGoBinaryInfo of (%v) due to error (%w)", path, err)
 			}
 
-			if verbose {
+			if gb.verbose {
 				log.Printf("checking binary (%v) for updates", path)
 			}
 
@@ -155,7 +163,7 @@ func updateBinaries(ctx context.Context, paths []string, workers int, verbose bo
 
 			// if current version is not less than latest version
 			if semver.Compare(info.Main.Version, ver.Version) != -1 {
-				if verbose {
+				if gb.verbose {
 					log.Printf(
 						"skipping updating (%v) as version (%v) is greater than or equal to latest (%v)\n",
 						path,
@@ -181,11 +189,11 @@ func updateBinaries(ctx context.Context, paths []string, workers int, verbose bo
 	return eg.Wait()
 }
 
-func reinstallBinaries(ctx context.Context, paths []string, workers int, verbose bool, goBinVer string) error {
+func (gb *goBin) reinstallBinaries(ctx context.Context) error {
 	var eg errgroup.Group
-	eg.SetLimit(workers)
+	eg.SetLimit(gb.workers)
 
-	for _, path := range paths {
+	for _, path := range gb.paths {
 		path := path
 		eg.Go(func() error {
 			info, err := getGoBinaryInfo(ctx, path)
@@ -193,19 +201,19 @@ func reinstallBinaries(ctx context.Context, paths []string, workers int, verbose
 				return fmt.Errorf("could not getGoBinaryInfo of (%v) due to error (%w)", path, err)
 			}
 
-			if semver.Compare(info.GoVersion, goBinVer) <= 0 {
-				if verbose {
+			if semver.Compare(info.GoVersion, gb.goBinVer) <= 0 {
+				if gb.verbose {
 					log.Printf(
 						"skipping (%v) as its version (%v) is equal or higher than the currently installed Go version (%v)\n",
 						path,
 						info.GoVersion,
-						goBinVer,
+						gb.goBinVer,
 					)
 				}
 				return nil
 			}
 
-			if verbose {
+			if gb.verbose {
 				log.Printf("reinstalling (%v)\n", path)
 			}
 
