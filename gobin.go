@@ -135,6 +135,8 @@ type goBin struct {
 	paths    []string
 	goBinVer string
 
+	force bool
+
 	workers int
 	verbose bool
 }
@@ -201,7 +203,7 @@ func (gb *goBin) reinstallBinaries(ctx context.Context) error {
 				return fmt.Errorf("could not getGoBinaryInfo of (%v) due to error (%w)", path, err)
 			}
 
-			if semver.Compare(info.GoVersion, gb.goBinVer) <= 0 {
+			if semver.Compare(info.GoVersion, gb.goBinVer) <= 0 && !gb.force {
 				if gb.verbose {
 					log.Printf(
 						"skipping (%v) as its version (%v) is equal or higher than the currently installed Go version (%v)\n",
@@ -226,7 +228,7 @@ func (gb *goBin) reinstallBinaries(ctx context.Context) error {
 				return fmt.Errorf(
 					"could not (go install %v@%v) due to error (%w)",
 					info.Path,
-					info.GoVersion,
+					info.Main.Version,
 					err,
 				)
 			}

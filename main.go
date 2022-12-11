@@ -27,6 +27,7 @@ func run() error {
 	update := flag.Bool("u", false, "update binaries if there is an update available")
 	list := flag.Bool("l", false, "list all binaries found in GOBIN with extra version information")
 	exclude := flag.String("e", "", "list of binaries to exclude from running against ex: \"goreinstall,gitsum\"")
+	force := flag.Bool("f", false, "forcefully reinstall binaries even if not required")
 
 	flag.CommandLine.Usage = func() {
 		fmt.Fprint(flag.CommandLine.Output(),
@@ -123,6 +124,7 @@ func run() error {
 	gb := goBin{
 		paths:    paths,
 		workers:  *maxWorkers,
+		force:    *force,
 		verbose:  *verbose,
 		goBinVer: goBinVer,
 	}
