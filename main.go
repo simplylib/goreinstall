@@ -65,6 +65,7 @@ func run() error {
 	}
 
 	if flag.NArg() == 0 && !*all {
+		log.SetOutput(os.Stderr)
 		log.Print("Expected at least 1 package\n\n")
 		flag.CommandLine.Usage()
 		os.Exit(1)
@@ -145,6 +146,7 @@ func run() error {
 
 func main() {
 	if err := run(); err != nil {
+		log.SetOutput(os.Stderr)
 		log.Fatalln(err)
 	}
 }
