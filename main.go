@@ -20,6 +20,7 @@ var errNoGoBinOrPath = errors.New("goreinstall: unable to find a GOPATH or GOBIN
 
 func run() error {
 	log.SetFlags(0)
+	log.SetOutput(os.Stdout)
 
 	verbose := flag.Bool("v", false, "be verbose about operations")
 	all := flag.Bool("a", false, "reinstall all binaries in GOBIN (ex: after go version update)")
