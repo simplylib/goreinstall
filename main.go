@@ -68,8 +68,7 @@ func run() error {
 		log.SetOutput(os.Stderr)
 		log.Print("Expected at least 1 package\n\n")
 		flag.CommandLine.Usage()
-		os.Exit(1)
-		return nil
+		return errors.New("")
 	}
 
 	var (
