@@ -65,11 +65,13 @@ func (c *ctxReaderAt) ReadAt(p []byte, off int64) (n int, err error) {
 	return c.reader.ReadAt(p, off)
 }
 
-func getGoBinaryInfo(ctx context.Context, path string) (*buildinfo.BuildInfo, error) {
-	f, err := os.Open(path)
+func getGoBinaryInfo(ctx context.Context, path string) (info *buildinfo.BuildInfo, err error) {
+	var f *os.File
+	f, err = os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("could not open file (%v) due to error (%w)", path, err)
 	}
+
 	defer func() {
 		if err2 := f.Close(); err2 != nil {
 			err = multierror.Append(err, err2)
@@ -83,7 +85,7 @@ func getGoBinaryInfo(ctx context.Context, path string) (*buildinfo.BuildInfo, er
 		}
 	}
 
-	info, err := buildinfo.Read(&ctxReaderAt{reader: f, ctx: ctx})
+	info, err = buildinfo.Read(&ctxReaderAt{reader: f, ctx: ctx})
 	if err != nil {
 		return nil, fmt.Errorf("could not Read buildinfo of (%v) due to error (%w)", path, err)
 	}
