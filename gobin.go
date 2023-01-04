@@ -17,6 +17,7 @@ import (
 	"github.com/simplylib/errgroup"
 	"github.com/simplylib/multierror"
 	"github.com/simplylib/ucheck/modproxy"
+	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
 )
 
@@ -67,7 +68,7 @@ func (c *ctxReaderAt) ReadAt(p []byte, off int64) (n int, err error) {
 
 func getGoBinaryInfo(ctx context.Context, path string) (info *buildinfo.BuildInfo, err error) {
 	var f *os.File
-	f, err = os.Open(path)
+	f, err = os.Open(filepath.Clean(path))
 	if err != nil {
 		return nil, fmt.Errorf("could not open file (%v) due to error (%w)", path, err)
 	}
@@ -178,7 +179,18 @@ func (gb *goBin) updateBinaries(ctx context.Context) error {
 				return nil
 			}
 
-			cmd := exec.CommandContext(ctx, "go", "install", info.Path+"@latest")
+			err = module.CheckPath(info.Path)
+			if err != nil {
+				return fmt.Errorf("module path (%v) is not a valid path for a go module with error (%w)", info.Path, err)
+			}
+
+			escapedModulePath, err := module.EscapePath(info.Path)
+			if err != nil {
+				return fmt.Errorf("could not escape go module path of (%v) error (%w)", info.Path, err)
+			}
+
+			// #nosec G204
+			cmd := exec.CommandContext(ctx, "go", "install", escapedModulePath+"@latest")
 			cmd.Stderr = os.Stderr
 			cmd.Stdout = os.Stdout
 
@@ -221,7 +233,23 @@ func (gb *goBin) reinstallBinaries(ctx context.Context) error {
 				log.Printf("reinstalling (%v)\n", path)
 			}
 
-			cmd := exec.CommandContext(ctx, "go", "install", info.Path+"@"+info.Main.Version)
+			err = module.Check(info.Path, info.Main.Version)
+			if err != nil {
+				return fmt.Errorf("module path version pair (%v@%v) is not a valid path for a go module error (%w)", info.Path, info.Main.Version, err)
+			}
+
+			escapedModulePath, err := module.EscapePath(info.Path)
+			if err != nil {
+				return fmt.Errorf("could not escape go module path of (%v) error (%w)", info.Path, err)
+			}
+
+			escapedModuleVersion, err := module.EscapeVersion(info.Main.Version)
+			if err != nil {
+				return fmt.Errorf("could not escape go module version of (%v) error (%w)", info.Main.Version, err)
+			}
+
+			// #nosec G204
+			cmd := exec.CommandContext(ctx, "go", "install", escapedModulePath+"@"+escapedModuleVersion)
 			cmd.Stderr = os.Stderr
 			cmd.Stdout = os.Stdout
 
