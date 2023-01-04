@@ -1,0 +1,7 @@
+name: go-workflows
+on:
+  push:
+  pull_request:
+jobs:
+  go:
+    uses: simplylib/githubworkflows/.github/workflows/go.yml@main
