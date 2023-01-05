@@ -1,10 +1,10 @@
-github.com/simplylib/errgroup v0.0.3 h1:komdkHZbYASdw5hiK18bFy5sNjIlpictIhhM7jNImfA=
-github.com/simplylib/errgroup v0.0.3/go.mod h1:heSxMihl5llM+feKc5wxj1X5gk75g5bU64T3d09n57k=
+github.com/simplylib/errgroup v0.0.5 h1:gQKKGMScxgK5/GyEd3mbt74CfOAquan3a9qGYUIJgB4=
+github.com/simplylib/errgroup v0.0.5/go.mod h1:0vzyItOFZKama20/L6Pec4Nblvp5CSrkVQmUUVAwv28=
 github.com/simplylib/multierror v0.0.2 h1:72szhIdMVOyyT7cJ9H7BgehRoWe54ELWHbSlQ/f8Z8Y=
 github.com/simplylib/multierror v0.0.2/go.mod h1:na9RFlzGQKHwZjlfE0guLlmyGsdRuSSksqTeuwEVItQ=
-github.com/simplylib/ucheck v0.0.4 h1:vXZxMWpS/cELSETBtTmWX6QfYFRxhZGuqJUddOX3GmA=
-github.com/simplylib/ucheck v0.0.4/go.mod h1:ulmrIv4dfQ6nbZ3nbrwso1XFNhU/C08yd0CXEi/Jb2o=
-golang.org/x/exp v0.0.0-20221230185412-738e83a70c30 h1:m9O6OTJ627iFnN2JIWfdqlZCzneRO6EEBsHXI25P8ws=
-golang.org/x/exp v0.0.0-20221230185412-738e83a70c30/go.mod h1:CxIveKay+FTh1D0yPZemJVgC/95VzuuOLq5Qi4xnoYc=
+github.com/simplylib/ucheck v0.0.5 h1:tx6Y1fSZn6lqk/873riiaebW21tV1abhWCY8pccXJ4Q=
+github.com/simplylib/ucheck v0.0.5/go.mod h1:7okbfM0TgRugihoWd8pnPUlky1rl3X1LY6clohqExpw=
+golang.org/x/exp v0.0.0-20230105000112-eab7a2c85304 h1:YUqj+XKtfrn3kXjFIiZ8jwKROD7ioAOOHUuo3ZZ2opc=
+golang.org/x/exp v0.0.0-20230105000112-eab7a2c85304/go.mod h1:CxIveKay+FTh1D0yPZemJVgC/95VzuuOLq5Qi4xnoYc=
 golang.org/x/mod v0.7.0 h1:LapD9S96VoQRhi/GrNTqeBJFrUjs5UHCAtTlgwA5oZA=
 golang.org/x/mod v0.7.0/go.mod h1:iBbtSCu2XBx23ZKBPSOrRkjjQPZFPuis4dIYUhu/chs=
