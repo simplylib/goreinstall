@@ -12,10 +12,10 @@ goreinstall reinstalls modules with new versions or when the go version is lower
 
 Usage: goreinstall [flags] <package(s) ...>
 
-Ex: goreinstall -a             // reinstall all binaries in GOBIN
-Ex: goreinstall -a -u          // reinstall all binaries and update if needed
-Ex: goreinstall goreinstall -u // reinstall goreinstall and update if needed
-
+Ex: goreinstall -a                // reinstall all binaries in GOBIN
+Ex: goreinstall -a -u             // reinstall all binaries and update if needed
+Ex: goreinstall goreinstall -u    // reinstall goreinstall and update if needed
+Ex: goreinstall -a -c "go1.20rc2" // reinstall all binaries if needed using go1.20rc2 command
 Flags:
   -a    reinstall all binaries in GOBIN (ex: after go version update)
   -c string
