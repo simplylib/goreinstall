@@ -28,16 +28,18 @@ func run() error {
 	update := flag.Bool("u", false, "update binaries if there is an update available")
 	list := flag.Bool("l", false, "list all binaries found in GOBIN with extra version information")
 	exclude := flag.String("e", "", "list of binaries to exclude from running against ex: \"goreinstall,gitsum\"")
+	compiler := flag.String("c", "go", "name of binary to use instead of (go) for go commands")
 	force := flag.Bool("f", false, "forcefully reinstall binaries even if not required")
 
 	flag.CommandLine.Usage = func() {
 		fmt.Fprint(flag.CommandLine.Output(),
 			os.Args[0]+" reinstalls modules with new versions or when the go version is lower than the current one\n",
 			"\nUsage: "+os.Args[0]+" [flags] <package(s) ...>\n\n",
-			"Ex: "+os.Args[0]+" -a             // reinstall all binaries in GOBIN\n",
-			"Ex: "+os.Args[0]+" -a -u          // reinstall all binaries and update if needed\n",
-			"Ex: "+os.Args[0]+" goreinstall -u // reinstall goreinstall and update if needed\n",
-			"\nFlags:",
+			"Ex: "+os.Args[0]+" -a                // reinstall all binaries in GOBIN\n",
+			"Ex: "+os.Args[0]+" -a -u             // reinstall all binaries and update if needed\n",
+			"Ex: "+os.Args[0]+" goreinstall -u    // reinstall goreinstall and update if needed\n",
+			"Ex: "+os.Args[0]+" -a -c \"go1.20rc2\" // reinstall all binaries if needed using go1.20rc2 command",
+			"\nFlags:\n",
 		)
 		flag.CommandLine.PrintDefaults()
 	}
@@ -76,12 +78,12 @@ func run() error {
 		paths    []string
 	)
 	if *all {
-		goEnv, err := getGoEnv(ctx)
+		goEnv, err := getGoEnv(ctx, *compiler)
 		if err != nil {
 			return fmt.Errorf("could not get GoEnv (%w)", err)
 		}
 
-		goBinVer = strings.ReplaceAll(goEnv.GoVersion, "go", "")
+		goBinVer = goEnv.GoVersion
 
 		paths, err = getAllGoBins(goEnv, *verbose)
 		if err != nil {
@@ -123,11 +125,12 @@ func run() error {
 	}
 
 	gb := goBin{
-		paths:    paths,
-		workers:  *maxWorkers,
-		force:    *force,
-		verbose:  *verbose,
-		goBinVer: goBinVer,
+		paths:        paths,
+		workers:      *maxWorkers,
+		compilerPath: *compiler,
+		force:        *force,
+		verbose:      *verbose,
+		goBinVer:     goBinVer,
 	}
 
 	// update binaries before attempting to reinstall those binaries.

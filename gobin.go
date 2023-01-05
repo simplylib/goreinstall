@@ -27,8 +27,8 @@ type goEnvVars struct {
 	GoVersion string `json:"GOVERSION"`
 }
 
-func getGoEnv(ctx context.Context) (goEnvVars, error) {
-	cmd := exec.CommandContext(ctx, "go", "env", "-json")
+func getGoEnv(ctx context.Context, compilerPath string) (goEnvVars, error) {
+	cmd := exec.CommandContext(ctx, compilerPath, "env", "-json")
 	cmd.Stderr = os.Stderr
 
 	stdoutBuf := &bytes.Buffer{}
@@ -91,8 +91,6 @@ func getGoBinaryInfo(ctx context.Context, path string) (info *buildinfo.BuildInf
 		return nil, fmt.Errorf("could not Read buildinfo of (%v) due to error (%w)", path, err)
 	}
 
-	info.GoVersion = strings.ReplaceAll(info.GoVersion, "go", "")
-
 	return info, nil
 }
 
@@ -137,6 +135,8 @@ func getAllGoBins(goEnv goEnvVars, verbose bool) ([]string, error) {
 type goBin struct {
 	paths    []string
 	goBinVer string
+
+	compilerPath string
 
 	force bool
 
@@ -190,7 +190,7 @@ func (gb *goBin) updateBinaries(ctx context.Context) error {
 			}
 
 			// #nosec G204
-			cmd := exec.CommandContext(ctx, "go", "install", escapedModulePath+"@latest")
+			cmd := exec.CommandContext(ctx, gb.compilerPath, "install", escapedModulePath+"@latest")
 			cmd.Stderr = os.Stderr
 			cmd.Stdout = os.Stdout
 
@@ -217,30 +217,28 @@ func (gb *goBin) reinstallBinaries(ctx context.Context) error {
 				return fmt.Errorf("could not getGoBinaryInfo of (%v) due to error (%w)", path, err)
 			}
 
-			if semver.Compare(info.GoVersion, gb.goBinVer) <= 0 && !gb.force {
+			goVersion := strings.Replace(info.GoVersion, "go", "v", 1)
+			goBinVersion := strings.Replace(gb.goBinVer, "go", "v", 1)
+
+			if semver.Compare(goVersion, goBinVersion) >= 0 || gb.force {
 				if gb.verbose {
 					log.Printf(
-						"skipping (%v) as its version (%v) is equal or higher than the currently installed Go version (%v)\n",
+						"skipping (%v) as its version (%v) is equal or higher than the currently installed Go version (%v) and we weren't forced to reinstall\n",
 						path,
-						info.GoVersion,
-						gb.goBinVer,
+						goVersion,
+						goBinVersion,
 					)
 				}
 				return nil
 			}
 
 			if gb.verbose {
-				log.Printf("reinstalling (%v)\n", path)
-			}
-
-			err = module.Check(info.Path, info.Main.Version)
-			if err != nil {
-				return fmt.Errorf("module path version pair (%v@%v) is not a valid path for a go module error (%w)", info.Path, info.Main.Version, err)
+				log.Printf("reinstalling (%v@%v)\n", path, info.Main.Version)
 			}
 
 			escapedModulePath, err := module.EscapePath(info.Path)
 			if err != nil {
-				return fmt.Errorf("could not escape go module path of (%v) error (%w)", info.Path, err)
+				return fmt.Errorf("could not escape go module path of (%v): error (%w)", info.Path, err)
 			}
 
 			escapedModuleVersion, err := module.EscapeVersion(info.Main.Version)
@@ -249,7 +247,7 @@ func (gb *goBin) reinstallBinaries(ctx context.Context) error {
 			}
 
 			// #nosec G204
-			cmd := exec.CommandContext(ctx, "go", "install", escapedModulePath+"@"+escapedModuleVersion)
+			cmd := exec.CommandContext(ctx, gb.compilerPath, "install", escapedModulePath+"@"+escapedModuleVersion)
 			cmd.Stderr = os.Stderr
 			cmd.Stdout = os.Stdout
 

@@ -30,7 +30,7 @@ func listCommand(ctx context.Context, args []string) error {
 		log.Println("getting GoEnv from commandline (go env -json)")
 	}
 
-	goEnv, err := getGoEnv(ctx)
+	goEnv, err := getGoEnv(ctx, "go")
 	if err != nil {
 		return fmt.Errorf("could not getGoEnv (%w)", err)
 	}
