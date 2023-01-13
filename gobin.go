@@ -75,7 +75,7 @@ func getGoBinaryInfo(ctx context.Context, path string) (info *buildinfo.BuildInf
 
 	defer func() {
 		if err2 := f.Close(); err2 != nil {
-			err = multierror.Append(err, fmt.Errorf("file could not be closed tue to error (%w)", err2))
+			err = multierror.Append(err, fmt.Errorf("file could not be closed due to error (%w)", err2))
 		}
 	}()
 
