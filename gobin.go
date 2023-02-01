@@ -220,7 +220,7 @@ func (gb *goBin) reinstallBinaries(ctx context.Context) error {
 			goVersion := strings.Replace(info.GoVersion, "go", "v", 1)
 			goBinVersion := strings.Replace(gb.goBinVer, "go", "v", 1)
 
-			if semver.Compare(goVersion, goBinVersion) >= 0 || gb.force {
+			if semver.Compare(goVersion, goBinVersion) >= 0 && !gb.force {
 				if gb.verbose {
 					log.Printf(
 						"skipping (%v) as its version (%v) is equal or higher than the currently installed Go version (%v) and we weren't forced to reinstall\n",

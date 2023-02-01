@@ -56,7 +56,7 @@ func listCommand(ctx context.Context, args []string) error {
 		if err != nil {
 			return fmt.Errorf("could not getGoBinaryInfo for (%v) error (%w)", paths[i], err)
 		}
-		log.Printf("go%v %s@%s\n", info.GoVersion, info.Main.Path, info.Main.Version)
+		log.Printf("%v %s@%s\n", info.GoVersion, info.Main.Path, info.Main.Version)
 	}
 
 	return nil
