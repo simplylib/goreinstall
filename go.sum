@@ -4,7 +4,7 @@ github.com/simplylib/multierror v0.0.2 h1:72szhIdMVOyyT7cJ9H7BgehRoWe54ELWHbSlQ/
 github.com/simplylib/multierror v0.0.2/go.mod h1:na9RFlzGQKHwZjlfE0guLlmyGsdRuSSksqTeuwEVItQ=
 github.com/simplylib/ucheck v0.0.5 h1:tx6Y1fSZn6lqk/873riiaebW21tV1abhWCY8pccXJ4Q=
 github.com/simplylib/ucheck v0.0.5/go.mod h1:7okbfM0TgRugihoWd8pnPUlky1rl3X1LY6clohqExpw=
-golang.org/x/exp v0.0.0-20230105000112-eab7a2c85304 h1:YUqj+XKtfrn3kXjFIiZ8jwKROD7ioAOOHUuo3ZZ2opc=
-golang.org/x/exp v0.0.0-20230105000112-eab7a2c85304/go.mod h1:CxIveKay+FTh1D0yPZemJVgC/95VzuuOLq5Qi4xnoYc=
+golang.org/x/exp v0.0.0-20230420155640-133eef4313cb h1:rhjz/8Mbfa8xROFiH+MQphmAmgqRM0bOMnytznhWEXk=
+golang.org/x/exp v0.0.0-20230420155640-133eef4313cb/go.mod h1:V1LtkGg67GoY2N1AnLN78QLrzxkLyJw7RJb1gzOOz9w=
 golang.org/x/mod v0.10.0 h1:lFO9qtOdlre5W1jxS3r/4szv2/6iXxScdzjoBMXNhYk=
 golang.org/x/mod v0.10.0/go.mod h1:iBbtSCu2XBx23ZKBPSOrRkjjQPZFPuis4dIYUhu/chs=
