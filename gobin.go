@@ -94,7 +94,7 @@ func getGoBinaryInfo(ctx context.Context, path string) (info *buildinfo.BuildInf
 	return info, nil
 }
 
-// getAllGoBins as a slice of paths to Go binaries in the GOBIN
+// getAllGoBins as a slice of paths to Go binaries in the GOBIN.
 func getAllGoBins(goEnv goEnvVars, verbose bool) ([]string, error) {
 	if verbose {
 		log.Println("running (go env)")

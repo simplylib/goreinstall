@@ -135,7 +135,7 @@ func run() error {
 
 	// update binaries before attempting to reinstall those binaries.
 	// This will give us a chance to install binaries with current updates and current compiler,
-	// preventing reinstalling just to recompile with current Go version ofr those select ones.
+	// preventing reinstalling just to recompile with current Go version for those select ones.
 	if *update {
 		err := gb.updateBinaries(ctx)
 		if err != nil {

@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-// listCommand runs "goreinstall -l"
+// listCommand runs "goreinstall -l".
 func listCommand(ctx context.Context, args []string) error {
 	flagSet := flag.FlagSet{}
 	flagSet.Usage = func() {
