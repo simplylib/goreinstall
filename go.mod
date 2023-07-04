@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/simplylib/multierror v0.0.2
-	golang.org/x/mod v0.10.0
+	golang.org/x/mod v0.12.0
 )
 
 require (
