@@ -1,5 +1,5 @@
-github.com/simplylib/errgroup v0.0.5 h1:gQKKGMScxgK5/GyEd3mbt74CfOAquan3a9qGYUIJgB4=
-github.com/simplylib/errgroup v0.0.5/go.mod h1:0vzyItOFZKama20/L6Pec4Nblvp5CSrkVQmUUVAwv28=
+github.com/simplylib/errgroup v0.0.6 h1:YOryBFznoYpVorii0xkxwRn3YSRN3cDdyJcEUOWIUro=
+github.com/simplylib/errgroup v0.0.6/go.mod h1:LrhDWlpGn/xMLQfDVHbltuUulMOmpj2OLcSveOkD9Bw=
 github.com/simplylib/multierror v0.0.2 h1:72szhIdMVOyyT7cJ9H7BgehRoWe54ELWHbSlQ/f8Z8Y=
 github.com/simplylib/multierror v0.0.2/go.mod h1:na9RFlzGQKHwZjlfE0guLlmyGsdRuSSksqTeuwEVItQ=
 github.com/simplylib/ucheck v0.0.5 h1:tx6Y1fSZn6lqk/873riiaebW21tV1abhWCY8pccXJ4Q=

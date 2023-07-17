@@ -8,7 +8,7 @@ require (
 )
 
 require (
-	github.com/simplylib/errgroup v0.0.5
+	github.com/simplylib/errgroup v0.0.6
 	github.com/simplylib/ucheck v0.0.5
 	golang.org/x/exp v0.0.0-20230420155640-133eef4313cb
 )
