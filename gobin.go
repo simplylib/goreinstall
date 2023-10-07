@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/simplylib/errgroup"
-	"github.com/simplylib/multierror"
 	"github.com/simplylib/ucheck/modproxy"
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
@@ -75,7 +74,7 @@ func getGoBinaryInfo(ctx context.Context, path string) (info *buildinfo.BuildInf
 
 	defer func() {
 		if err2 := f.Close(); err2 != nil {
-			err = multierror.Append(err, fmt.Errorf("file could not be closed due to error (%w)", err2))
+			err = errors.Join(err, fmt.Errorf("file could not be closed due to error (%w)", err2))
 		}
 	}()
 
