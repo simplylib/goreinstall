@@ -2,7 +2,7 @@ module github.com/simplylib/goreinstall
 
 go 1.20
 
-require golang.org/x/mod v0.14.0
+require golang.org/x/mod v0.15.0
 
 require (
 	github.com/simplylib/errgroup v0.0.6
