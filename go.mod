@@ -2,7 +2,7 @@ module github.com/simplylib/goreinstall
 
 go 1.23
 
-require golang.org/x/mod v0.21.0
+require golang.org/x/mod v0.22.0
 
 require (
 	github.com/simplylib/errgroup v0.0.6
