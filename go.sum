@@ -1,6 +1,6 @@
 github.com/simplylib/errgroup v0.0.6 h1:YOryBFznoYpVorii0xkxwRn3YSRN3cDdyJcEUOWIUro=
 github.com/simplylib/errgroup v0.0.6/go.mod h1:LrhDWlpGn/xMLQfDVHbltuUulMOmpj2OLcSveOkD9Bw=
-github.com/simplylib/ucheck v0.0.6 h1:hL0y380uCaao+3VFl3/8pKv7oKG4dgs1n8bPD90ggSg=
-github.com/simplylib/ucheck v0.0.6/go.mod h1:5Pc6qBB3bBS5CXi2ZAJ3Ub91KfpkfzKINxLnyx9V8aI=
+github.com/simplylib/ucheck v0.0.8 h1:2oobn9tZiM7fERuwVFlqC1Co21JJBVDt+KXLRwaTsg4=
+github.com/simplylib/ucheck v0.0.8/go.mod h1:5xWlvazEjXfnqdYol94PbKMZ228ugMXHEG6PTVWOMLw=
 golang.org/x/mod v0.24.0 h1:ZfthKaKaT4NrhGVZHO1/WDTwGES4De8KtWO0SIbNJMU=
 golang.org/x/mod v0.24.0/go.mod h1:IXM97Txy2VM4PJ3gI61r1YEk/gAj6zAHN3AdZt6S9Ww=
