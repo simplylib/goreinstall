@@ -46,10 +46,11 @@ func listCommand(ctx context.Context, args []string) error {
 	}
 
 	var info *buildinfo.BuildInfo
+
 	for i := range paths {
 		select {
 		case <-ctx.Done():
-			break
+			return ctx.Err()
 		default:
 		}
 
