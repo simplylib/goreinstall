@@ -148,8 +148,6 @@ func (gb *goBin) updateBinaries(ctx context.Context) error {
 	eg.SetLimit(gb.workers)
 
 	for _, path := range gb.paths {
-		path := path
-
 		eg.Go(func() error {
 			info, err := getGoBinaryInfo(ctx, path)
 			if err != nil {
@@ -209,7 +207,6 @@ func (gb *goBin) reinstallBinaries(ctx context.Context) error {
 	eg.SetLimit(gb.workers)
 
 	for _, path := range gb.paths {
-		path := path
 		eg.Go(func() error {
 			info, err := getGoBinaryInfo(ctx, path)
 			if err != nil {
