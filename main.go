@@ -31,7 +31,8 @@ func run() error {
 	force := flag.Bool("f", false, "forcefully reinstall binaries even if not required")
 
 	flag.CommandLine.Usage = func() {
-		fmt.Fprint(flag.CommandLine.Output(),
+		// ignore error for Fprintln, since we can't do anything if stdout doesn't work.
+		_, _ = fmt.Fprint(flag.CommandLine.Output(),
 			os.Args[0]+" reinstalls modules with new versions or when the go version is lower than the current one\n",
 			"\nUsage: "+os.Args[0]+" [flags] <package(s) ...>\n\n",
 			"Ex: "+os.Args[0]+" -a                // reinstall all binaries in GOBIN\n",

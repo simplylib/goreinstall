@@ -13,7 +13,8 @@ import (
 func listCommand(ctx context.Context, args []string) error {
 	flagSet := flag.FlagSet{}
 	flagSet.Usage = func() {
-		fmt.Fprintln(flagSet.Output(),
+		// ignore error for Fprintln, since we can't do anything if stdout doesn't work.
+		_, _ = fmt.Fprintln(flagSet.Output(),
 			os.Args[0]+os.Args[1]+": lists modules in GoBin with their versions and Go compiler versions",
 		)
 		flagSet.PrintDefaults()
