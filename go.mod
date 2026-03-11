@@ -1,8 +1,8 @@
 module github.com/simplylib/goreinstall
 
-go 1.24.0
+go 1.25.0
 
-require golang.org/x/mod v0.33.0
+require golang.org/x/mod v0.34.0
 
 require (
 	github.com/simplylib/errgroup v0.0.6
